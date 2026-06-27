@@ -34,7 +34,7 @@ Both players hold keys to move. No mouse support.
 ## Game States
 
 ```
-START ──(Enter)──► PLAYING ──(score reaches 7)──► WINNER ──(Enter)──► PLAYING
+START ──(Enter)──► MENU ──(Enter)──► PLAYING ──(score reaches 7)──► WINNER ──(Enter)──► MENU
 ```
 
 ### Start Screen
@@ -42,13 +42,20 @@ START ──(Enter)──► PLAYING ──(score reaches 7)──► WINNER ─
 - Prompt: *PRESS ENTER TO START*
 - Controls reminder shown for each player
 
+### Menu Screen
+- Title: *SELECT MODE*
+- Lists available modes; selected mode prefixed with `>`
+- **Up/Down** to navigate, **Enter** to start selected mode
+- Prompt: *PRESS ENTER TO START*
+
 ### Playing
-- Live gameplay — ball, paddles, scores all active
+- Live gameplay — ball(s), paddles, scores all active
+- Mode determines ball count and speed behaviour
 
 ### Winner Screen
 - Displays: *PLAYER X WINS!*
 - Prompt: *PRESS ENTER TO PLAY AGAIN*
-- Pressing Enter resets all scores and entities, returns to Playing
+- Pressing Enter resets all scores and entities, returns to Menu
 
 ---
 
@@ -58,13 +65,13 @@ START ──(Enter)──► PLAYING ──(score reaches 7)──► WINNER ─
 
 **Wall bounce:** Ball bounces off top and bottom walls. Left and right edges are scoring zones — no wall there.
 
-**Speed escalation:** Each time the ball hits a paddle, its speed increases by 0.3 px/frame. Speed is capped at 14 px/frame to prevent tunnelling. Rally counter resets when a point is scored.
+**Speed escalation (Classic mode):** Each time the ball hits a paddle, its speed increases by 0.3 px/frame. Speed is capped at 14 px/frame to prevent tunnelling. Rally counter resets when a point is scored. In Two Ball mode, speed is constant (no escalation).
 
 | Property | Value |
 |---|---|
 | Starting speed | 4 px/frame |
-| Speed increase per hit | +0.3 px/frame |
-| Max speed | 14 px/frame |
+| Speed increase per hit | +0.3 px/frame (Classic only) |
+| Max speed | 14 px/frame (Classic only) |
 | Ball radius | 8 px |
 
 **Paddle deflection:** Where the ball strikes the paddle affects its vertical exit angle. A hit near the paddle's edge produces a steeper angle; a hit near the centre produces a flatter one.
