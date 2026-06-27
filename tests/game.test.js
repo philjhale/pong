@@ -89,30 +89,41 @@ describe('Game', () => {
       game.scoreRight = WINNING_SCORE - 1;
       vi.spyOn(game.ball, 'isOutLeft').mockReturnValue(true);
       vi.spyOn(game.ball, 'isOutRight').mockReturnValue(false);
+      const resetSpy = vi.spyOn(game.ball, 'reset');
       game._update();
       expect(game.state).toBe(STATE.WINNER);
       expect(game.winner).toBe(2);
+      expect(resetSpy).not.toHaveBeenCalled();
     });
 
     it('transitions to WINNER (player 1) when left reaches WINNING_SCORE', () => {
       game.scoreLeft = WINNING_SCORE - 1;
       vi.spyOn(game.ball, 'isOutLeft').mockReturnValue(false);
       vi.spyOn(game.ball, 'isOutRight').mockReturnValue(true);
+      const resetSpy = vi.spyOn(game.ball, 'reset');
       game._update();
       expect(game.state).toBe(STATE.WINNER);
       expect(game.winner).toBe(1);
+      expect(resetSpy).not.toHaveBeenCalled();
     });
   });
 
-  it('stop() calls cancelAnimationFrame', () => {
+  it('stop() calls cancelAnimationFrame with the correct RAF id', () => {
     game.start();
     game.stop();
-    expect(cancelAnimationFrame).toHaveBeenCalled();
+    expect(cancelAnimationFrame).toHaveBeenCalledWith(1);
   });
 
   it('double start() does not spawn second loop', () => {
     game.start();
     game.start();
     expect(requestAnimationFrame).toHaveBeenCalledTimes(1);
+  });
+
+  it('stop() then start() re-enables the loop', () => {
+    game.start();
+    game.stop();
+    game.start();
+    expect(requestAnimationFrame).toHaveBeenCalledTimes(2);
   });
 });
