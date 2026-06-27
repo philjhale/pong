@@ -5,7 +5,7 @@ import { Ball } from './ball.js';
 import { AudioManager } from './audio.js';
 import { drawBackground, drawCenterLine, drawScores, drawStartScreen, drawWinnerScreen } from './renderer.js';
 
-const STATE = Object.freeze({ START: 'START', PLAYING: 'PLAYING', WINNER: 'WINNER' });
+export const STATE = Object.freeze({ START: 'START', PLAYING: 'PLAYING', WINNER: 'WINNER' });
 
 export class Game {
   constructor(canvas) {
@@ -15,6 +15,7 @@ export class Game {
     this.scoreRight = 0;
     this.winner = null;
     this.enterWasDown = false;
+    this._rafId = null;
     this.audio = new AudioManager();
     this._initEntities();
   }
@@ -26,12 +27,20 @@ export class Game {
   }
 
   start() {
+    if (this._rafId) return;
     const loop = () => {
       this._update();
       this._draw();
-      requestAnimationFrame(loop);
+      this._rafId = requestAnimationFrame(loop);
     };
-    requestAnimationFrame(loop);
+    this._rafId = requestAnimationFrame(loop);
+  }
+
+  stop() {
+    if (this._rafId) {
+      cancelAnimationFrame(this._rafId);
+      this._rafId = null;
+    }
   }
 
   _update() {
@@ -39,12 +48,7 @@ export class Game {
     const enterJustPressed = enterDown && !this.enterWasDown;
     this.enterWasDown = enterDown;
 
-    if (this.state === STATE.START) {
-      if (enterJustPressed) this._beginGame();
-      return;
-    }
-
-    if (this.state === STATE.WINNER) {
+    if (this.state !== STATE.PLAYING) {
       if (enterJustPressed) this._beginGame();
       return;
     }

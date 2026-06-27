@@ -80,4 +80,12 @@ describe('AudioManager', () => {
     await new Promise(r => setTimeout(r, 0));
     expect(warnSpy).not.toHaveBeenCalled();
   });
+
+  it('playScore logs non-NotAllowedError via console.warn', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    scoreNode.play.mockRejectedValue(new Error('decode error'));
+    mgr.playScore();
+    await new Promise(r => setTimeout(r, 0));
+    expect(warnSpy).toHaveBeenCalledOnce();
+  });
 });
