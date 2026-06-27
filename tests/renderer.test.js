@@ -5,6 +5,7 @@ import {
   drawScores,
   drawStartScreen,
   drawWinnerScreen,
+  drawMenuScreen,
 } from '../src/renderer.js';
 
 function mockCtx() {
@@ -70,5 +71,36 @@ describe('renderer', () => {
     drawWinnerScreen(ctx, 1);
     expect(ctx.save).toHaveBeenCalled();
     expect(ctx.restore).toHaveBeenCalled();
+  });
+});
+
+describe('drawMenuScreen', () => {
+  it('renders all mode labels', () => {
+    const ctx = mockCtx();
+    const modes = [{ label: 'Classic' }, { label: 'Two Ball' }];
+    drawMenuScreen(ctx, modes, 0);
+    const texts = ctx.fillText.mock.calls.map(c => String(c[0]));
+    expect(texts.some(t => t.includes('Classic'))).toBe(true);
+    expect(texts.some(t => t.includes('Two Ball'))).toBe(true);
+  });
+
+  it('prefixes selected entry with >', () => {
+    const ctx = mockCtx();
+    const modes = [{ label: 'Classic' }, { label: 'Two Ball' }];
+    drawMenuScreen(ctx, modes, 1);
+    const texts = ctx.fillText.mock.calls.map(c => String(c[0]));
+    expect(texts.some(t => t.startsWith('> Two Ball'))).toBe(true);
+    expect(texts.some(t => t === 'Classic')).toBe(true);
+  });
+
+  it('calls save and restore (no state leak)', () => {
+    const ctx = mockCtx();
+    drawMenuScreen(ctx, [{ label: 'Classic' }], 0);
+    expect(ctx.save).toHaveBeenCalled();
+    expect(ctx.restore).toHaveBeenCalled();
+  });
+
+  it('runs without throwing', () => {
+    expect(() => drawMenuScreen(mockCtx(), [{ label: 'Classic' }, { label: 'Two Ball' }], 0)).not.toThrow();
   });
 });

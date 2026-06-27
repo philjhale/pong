@@ -53,6 +53,34 @@ export function drawWinnerScreen(ctx, winner) {
   ctx.font = '32px "Press Start 2P"';
   ctx.fillText(`PLAYER ${winner} WINS!`, CANVAS_W / 2, CANVAS_H / 2 - 40);
   ctx.font = '14px "Press Start 2P"';
-  ctx.fillText('PRESS ENTER TO PLAY AGAIN', CANVAS_W / 2, CANVAS_H / 2 + 30);
+  ctx.fillText('PRESS ENTER FOR MODE SELECT', CANVAS_W / 2, CANVAS_H / 2 + 30);
+  ctx.restore();
+}
+
+export function drawMenuScreen(ctx, modes, selectedIndex) {
+  ctx.save();
+  drawBackground(ctx);
+  drawCenterLine(ctx);
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = COLOR_FG;
+  ctx.font = '24px "Press Start 2P"';
+  ctx.fillText('SELECT MODE', CANVAS_W / 2, CANVAS_H / 2 - 100);
+
+  modes.forEach((mode, i) => {
+    ctx.font = '16px "Press Start 2P"';
+    if (i === selectedIndex) {
+      ctx.fillStyle = COLOR_LINE;
+      ctx.fillText(`> ${mode.label}`, CANVAS_W / 2, CANVAS_H / 2 - 20 + i * 50);
+    } else {
+      ctx.fillStyle = COLOR_FG;
+      ctx.fillText(mode.label, CANVAS_W / 2, CANVAS_H / 2 - 20 + i * 50);
+    }
+  });
+
+  ctx.font = '11px "Press Start 2P"';
+  ctx.fillStyle = COLOR_FG;
+  ctx.fillText('PRESS ENTER TO START', CANVAS_W / 2, CANVAS_H - 60);
+
   ctx.restore();
 }
