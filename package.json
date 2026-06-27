@@ -1,0 +1,13 @@
+{
+  "name": "pong",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "serve": "npx serve . -l 8080"
+  },
+  "devDependencies": {
+    "vitest": "^1.6.0",
+    "@vitest/coverage-v8": "^1.6.0"
+  }
+}

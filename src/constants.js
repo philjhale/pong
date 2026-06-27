@@ -1,0 +1,15 @@
+export const CANVAS_W = 800;
+export const CANVAS_H = 600;
+export const PADDLE_W = 12;
+export const PADDLE_H = 80;
+export const PADDLE_RADIUS = 4;
+export const PADDLE_SPEED = 5;
+export const PADDLE_MARGIN = 20;
+export const BALL_RADIUS = 8;
+export const BALL_INITIAL_SPEED = 4;
+export const BALL_SPEED_INCREMENT = 0.3;
+export const BALL_MAX_SPEED = 14;
+export const WINNING_SCORE = 7;
+export const COLOR_BG = '#0d0d2b';
+export const COLOR_FG = '#ffffff';
+export const COLOR_LINE = '#ffd700';
