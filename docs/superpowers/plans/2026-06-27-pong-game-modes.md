@@ -115,6 +115,7 @@ export const MODES = [
     ballCount: 2,
     speedProgression: false,
     onScore(game) {
+      // fixed directions: ball 0 right, ball 1 left — symmetric reset regardless of which side scored
       game.balls.forEach((ball, i) => ball.reset(i === 0 ? 1 : -1));
     },
   },
@@ -343,6 +344,23 @@ describe('Game', () => {
       game._handleScore('right', game.balls[0]);
       expect(resetSpy).not.toHaveBeenCalled();
     });
+
+    it('calls mode.onScore hook instead of ball.reset when hook is defined', () => {
+      const onScore = vi.fn();
+      game.mode = { ...game.mode, onScore };
+      const resetSpy = vi.spyOn(game.balls[0], 'reset');
+      game._handleScore('right', game.balls[0]);
+      expect(onScore).toHaveBeenCalledWith(game, 'right', game.balls[0]);
+      expect(resetSpy).not.toHaveBeenCalled();
+    });
+
+    it('ignores second call in same frame if state is already WINNER', () => {
+      game.scoreRight = WINNING_SCORE - 1;
+      game._handleScore('right', game.balls[0]);
+      expect(game.state).toBe(STATE.WINNER);
+      game._handleScore('right', game.balls[0]); // second ball exits same frame
+      expect(game.scoreRight).toBe(WINNING_SCORE); // not inflated
+    });
   });
 
   describe('MENU state navigation', () => {
@@ -550,6 +568,7 @@ export class Game {
   }
 
   _handleScore(side, ball) {
+    if (this.state !== STATE.PLAYING) return; // guard: both balls can exit in the same frame
     if (side === 'right') this.scoreRight++;
     else this.scoreLeft++;
 
