@@ -7,8 +7,7 @@ export class AudioManager {
   }
 
   playHit() {
-    this.hit.currentTime = 0;
-    this.hit.play().catch(() => {});
+    this.hit.cloneNode().play().catch(() => {});
   }
 
   playScore() {
