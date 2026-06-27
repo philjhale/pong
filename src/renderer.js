@@ -53,7 +53,7 @@ export function drawWinnerScreen(ctx, winner) {
   ctx.font = '32px "Press Start 2P"';
   ctx.fillText(`PLAYER ${winner} WINS!`, CANVAS_W / 2, CANVAS_H / 2 - 40);
   ctx.font = '14px "Press Start 2P"';
-  ctx.fillText('PRESS ENTER TO PLAY AGAIN', CANVAS_W / 2, CANVAS_H / 2 + 30);
+  ctx.fillText('PRESS ENTER FOR MODE SELECT', CANVAS_W / 2, CANVAS_H / 2 + 30);
   ctx.restore();
 }
 
