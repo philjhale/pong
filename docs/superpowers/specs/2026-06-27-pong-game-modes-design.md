@@ -9,10 +9,10 @@ Add a mode selection menu and a new Two Ball game mode to the existing Pong game
 ## Modes
 
 ### Classic
-Current game behavior, unchanged. One ball, speed increases with rally hits, first to 7 wins.
+Current game behavior, unchanged. One ball, speed increases with rally hits, first to 7 wins. All modes share this win condition.
 
 ### Two Ball
-Two balls on screen simultaneously. No speed progression — balls maintain constant speed throughout. When either ball exits the screen a point is scored and both balls reset to center. One ball launches left, one launches right on each reset.
+Two balls on screen simultaneously. No speed progression — balls maintain constant speed throughout. When either ball exits the screen a point is scored and both balls reset to center. One ball launches left, one launches right on each reset. First to 7 wins. Two Ball overrides `onScore` to reset all active balls, not just the one that exited.
 
 ## Mode Config System
 
