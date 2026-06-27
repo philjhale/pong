@@ -16,4 +16,22 @@ describe('isDown', () => {
     window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyS' }));
     expect(isDown('KeyS')).toBe(false);
   });
+
+  it('calls preventDefault for game keys on keydown', () => {
+    const e = new KeyboardEvent('keydown', { code: 'ArrowUp', cancelable: true, bubbles: true });
+    window.dispatchEvent(e);
+    expect(e.defaultPrevented).toBe(true);
+  });
+
+  it('does not call preventDefault for non-game keys on keydown', () => {
+    const e = new KeyboardEvent('keydown', { code: 'KeyA', cancelable: true, bubbles: true });
+    window.dispatchEvent(e);
+    expect(e.defaultPrevented).toBe(false);
+  });
+
+  it('calls preventDefault for game keys on keyup', () => {
+    const e = new KeyboardEvent('keyup', { code: 'ArrowDown', cancelable: true, bubbles: true });
+    window.dispatchEvent(e);
+    expect(e.defaultPrevented).toBe(true);
+  });
 });
