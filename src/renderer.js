@@ -56,3 +56,5 @@ export function drawWinnerScreen(ctx, winner) {
   ctx.fillText('PRESS ENTER TO PLAY AGAIN', CANVAS_W / 2, CANVAS_H / 2 + 30);
   ctx.restore();
 }
+
+export function drawMenuScreen(_ctx, _modes, _selectedIndex) {}

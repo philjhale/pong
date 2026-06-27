@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Game, STATE } from '../src/game.js';
 import { WINNING_SCORE } from '../src/constants.js';
+import { MODES } from '../src/modes.js';
+import { isDown } from '../src/input.js';
 
 vi.mock('../src/input.js', () => ({ isDown: vi.fn().mockReturnValue(false) }));
 vi.mock('../src/audio.js', () => ({
@@ -27,6 +29,7 @@ describe('Game', () => {
   beforeEach(() => {
     vi.stubGlobal('requestAnimationFrame', vi.fn().mockReturnValue(1));
     vi.stubGlobal('cancelAnimationFrame', vi.fn());
+    isDown.mockReturnValue(false);
     game = new Game(mockCanvas());
   });
 
@@ -65,31 +68,31 @@ describe('Game', () => {
   describe('in PLAYING state', () => {
     beforeEach(() => {
       game._beginGame();
-      vi.spyOn(game.ball, 'update').mockImplementation(() => {});
-      vi.spyOn(game.ball, 'collidePaddle').mockReturnValue(false);
+      vi.spyOn(game.balls[0], 'update').mockImplementation(() => {});
+      vi.spyOn(game.balls[0], 'collidePaddle').mockReturnValue(false);
     });
 
     it('right player scores when ball exits left', () => {
-      vi.spyOn(game.ball, 'isOutLeft').mockReturnValue(true);
-      vi.spyOn(game.ball, 'isOutRight').mockReturnValue(false);
-      vi.spyOn(game.ball, 'reset').mockImplementation(() => {});
+      vi.spyOn(game.balls[0], 'isOutLeft').mockReturnValue(true);
+      vi.spyOn(game.balls[0], 'isOutRight').mockReturnValue(false);
+      vi.spyOn(game.balls[0], 'reset').mockImplementation(() => {});
       game._update();
       expect(game.scoreRight).toBe(1);
     });
 
     it('left player scores when ball exits right', () => {
-      vi.spyOn(game.ball, 'isOutLeft').mockReturnValue(false);
-      vi.spyOn(game.ball, 'isOutRight').mockReturnValue(true);
-      vi.spyOn(game.ball, 'reset').mockImplementation(() => {});
+      vi.spyOn(game.balls[0], 'isOutLeft').mockReturnValue(false);
+      vi.spyOn(game.balls[0], 'isOutRight').mockReturnValue(true);
+      vi.spyOn(game.balls[0], 'reset').mockImplementation(() => {});
       game._update();
       expect(game.scoreLeft).toBe(1);
     });
 
     it('transitions to WINNER (player 2) when right reaches WINNING_SCORE', () => {
       game.scoreRight = WINNING_SCORE - 1;
-      vi.spyOn(game.ball, 'isOutLeft').mockReturnValue(true);
-      vi.spyOn(game.ball, 'isOutRight').mockReturnValue(false);
-      const resetSpy = vi.spyOn(game.ball, 'reset');
+      vi.spyOn(game.balls[0], 'isOutLeft').mockReturnValue(true);
+      vi.spyOn(game.balls[0], 'isOutRight').mockReturnValue(false);
+      const resetSpy = vi.spyOn(game.balls[0], 'reset');
       game._update();
       expect(game.state).toBe(STATE.WINNER);
       expect(game.winner).toBe(2);
@@ -98,14 +101,137 @@ describe('Game', () => {
 
     it('transitions to WINNER (player 1) when left reaches WINNING_SCORE', () => {
       game.scoreLeft = WINNING_SCORE - 1;
-      vi.spyOn(game.ball, 'isOutLeft').mockReturnValue(false);
-      vi.spyOn(game.ball, 'isOutRight').mockReturnValue(true);
-      const resetSpy = vi.spyOn(game.ball, 'reset');
+      vi.spyOn(game.balls[0], 'isOutLeft').mockReturnValue(false);
+      vi.spyOn(game.balls[0], 'isOutRight').mockReturnValue(true);
+      const resetSpy = vi.spyOn(game.balls[0], 'reset');
       game._update();
       expect(game.state).toBe(STATE.WINNER);
       expect(game.winner).toBe(1);
       expect(resetSpy).not.toHaveBeenCalled();
     });
+  });
+
+  describe('_handleScore', () => {
+    beforeEach(() => {
+      game._beginGame();
+    });
+
+    it('increments scoreRight when side is right', () => {
+      vi.spyOn(game.balls[0], 'reset').mockImplementation(() => {});
+      game._handleScore('right', game.balls[0]);
+      expect(game.scoreRight).toBe(1);
+    });
+
+    it('increments scoreLeft when side is left', () => {
+      vi.spyOn(game.balls[0], 'reset').mockImplementation(() => {});
+      game._handleScore('left', game.balls[0]);
+      expect(game.scoreLeft).toBe(1);
+    });
+
+    it('resets ball leftward (-1) when right player scores in Classic', () => {
+      const resetSpy = vi.spyOn(game.balls[0], 'reset').mockImplementation(() => {});
+      game._handleScore('right', game.balls[0]);
+      expect(resetSpy).toHaveBeenCalledWith(-1);
+    });
+
+    it('resets ball rightward (1) when left player scores in Classic', () => {
+      const resetSpy = vi.spyOn(game.balls[0], 'reset').mockImplementation(() => {});
+      game._handleScore('left', game.balls[0]);
+      expect(resetSpy).toHaveBeenCalledWith(1);
+    });
+
+    it('sets WINNER state and winner=2 when right reaches WINNING_SCORE', () => {
+      game.scoreRight = WINNING_SCORE - 1;
+      game._handleScore('right', game.balls[0]);
+      expect(game.state).toBe(STATE.WINNER);
+      expect(game.winner).toBe(2);
+    });
+
+    it('sets WINNER state and winner=1 when left reaches WINNING_SCORE', () => {
+      game.scoreLeft = WINNING_SCORE - 1;
+      game._handleScore('left', game.balls[0]);
+      expect(game.state).toBe(STATE.WINNER);
+      expect(game.winner).toBe(1);
+    });
+
+    it('does not reset ball when WINNER is reached', () => {
+      game.scoreRight = WINNING_SCORE - 1;
+      const resetSpy = vi.spyOn(game.balls[0], 'reset');
+      game._handleScore('right', game.balls[0]);
+      expect(resetSpy).not.toHaveBeenCalled();
+    });
+
+    it('calls mode.onScore hook instead of ball.reset when hook is defined', () => {
+      const onScore = vi.fn();
+      game.mode = { ...game.mode, onScore };
+      const resetSpy = vi.spyOn(game.balls[0], 'reset');
+      game._handleScore('right', game.balls[0]);
+      expect(onScore).toHaveBeenCalledWith(game, 'right', game.balls[0]);
+      expect(resetSpy).not.toHaveBeenCalled();
+    });
+
+    it('ignores second call in same frame if state is already WINNER', () => {
+      game.scoreRight = WINNING_SCORE - 1;
+      game._handleScore('right', game.balls[0]);
+      expect(game.state).toBe(STATE.WINNER);
+      game._handleScore('right', game.balls[0]); // second ball exits same frame
+      expect(game.scoreRight).toBe(WINNING_SCORE); // not inflated
+    });
+  });
+
+  describe('MENU state navigation', () => {
+    beforeEach(() => {
+      game.state = STATE.MENU;
+      game.selectedIndex = 0;
+      game.enterWasDown = false;
+      game.upWasDown = false;
+      game.downWasDown = false;
+    });
+
+    it('ArrowDown increments selectedIndex', () => {
+      isDown.mockImplementation(key => key === 'ArrowDown');
+      game._update();
+      expect(game.selectedIndex).toBe(1);
+    });
+
+    it('ArrowDown wraps from last index back to 0', () => {
+      game.selectedIndex = MODES.length - 1;
+      isDown.mockImplementation(key => key === 'ArrowDown');
+      game._update();
+      expect(game.selectedIndex).toBe(0);
+    });
+
+    it('ArrowUp decrements selectedIndex with wrap to last', () => {
+      game.selectedIndex = 0;
+      isDown.mockImplementation(key => key === 'ArrowUp');
+      game._update();
+      expect(game.selectedIndex).toBe(MODES.length - 1);
+    });
+
+    it('Enter starts PLAYING with the selected mode', () => {
+      game.selectedIndex = 1;
+      isDown.mockImplementation(key => key === 'Enter');
+      game._update();
+      expect(game.state).toBe(STATE.PLAYING);
+      expect(game.mode.id).toBe(MODES[1].id);
+    });
+  });
+
+  it('Enter in START transitions to MENU', () => {
+    game.state = STATE.START;
+    game.enterWasDown = false;
+    isDown.mockImplementation(key => key === 'Enter');
+    game._update();
+    expect(game.state).toBe(STATE.MENU);
+  });
+
+  it('Enter in WINNER transitions to MENU', () => {
+    game.state = STATE.WINNER;
+    game.winner = 1;
+    game.enterWasDown = false;
+    isDown.mockImplementation(key => key === 'Enter');
+    game._update();
+    expect(game.state).toBe(STATE.MENU);
   });
 
   it('stop() calls cancelAnimationFrame with the correct RAF id', () => {
