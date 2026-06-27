@@ -109,5 +109,16 @@ describe('Ball', () => {
       ball.collidePaddle(paddle);
       expect(ball.speed).toBeLessThanOrEqual(BALL_MAX_SPEED);
     });
+
+    it('velocity magnitude equals speed after hit (normalization invariant)', () => {
+      ball.collidePaddle(paddle);
+      const mag = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
+      expect(mag).toBeCloseTo(ball.speed, 10);
+    });
+
+    it('|vy| >= 0.2 * speed after center hit (min-vy guard)', () => {
+      ball.collidePaddle(paddle); // vy=0 → hitPos=0 → guard fires
+      expect(Math.abs(ball.vy)).toBeGreaterThanOrEqual(ball.speed * 0.2 - 0.0001);
+    });
   });
 });
