@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Game, STATE } from '../src/game.js';
-import { WINNING_SCORE } from '../src/constants.js';
+import { WINNING_SCORE, BALL_INITIAL_SPEED } from '../src/constants.js';
 import { MODES } from '../src/modes.js';
 import { isDown } from '../src/input.js';
 
@@ -108,6 +108,27 @@ describe('Game', () => {
       expect(game.state).toBe(STATE.WINNER);
       expect(game.winner).toBe(1);
       expect(resetSpy).not.toHaveBeenCalled();
+    });
+
+    it('clamps ball speed to BALL_INITIAL_SPEED after paddle hit in non-progression mode', () => {
+      // Switch to Two Ball mode (speedProgression: false)
+      game.selectedIndex = 1;
+      game._beginGame();
+      const ball = game.balls[0];
+      // Force a paddle hit
+      vi.spyOn(ball, 'isOutLeft').mockReturnValue(false);
+      vi.spyOn(ball, 'isOutRight').mockReturnValue(false);
+      vi.spyOn(ball, 'collidePaddle').mockReturnValue(true);
+      vi.spyOn(ball, 'update').mockImplementation(() => {});
+      // Give the ball elevated speed/velocity as if collidePaddle accelerated it
+      ball.vx = 10;
+      ball.vy = 0;
+      ball.speed = 10;
+      ball.rallyHits = 5;
+      game._update();
+      expect(ball.speed).toBe(BALL_INITIAL_SPEED);
+      expect(Math.hypot(ball.vx, ball.vy)).toBeCloseTo(BALL_INITIAL_SPEED, 5);
+      expect(ball.rallyHits).toBe(0);
     });
   });
 

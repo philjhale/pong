@@ -106,6 +106,7 @@ export class Game {
           ball.speed = BALL_INITIAL_SPEED;
           ball.vx = (ball.vx / mag) * BALL_INITIAL_SPEED;
           ball.vy = (ball.vy / mag) * BALL_INITIAL_SPEED;
+          ball.rallyHits = 0;
         }
         this.mode.onPaddleHit?.(ball);
       }
