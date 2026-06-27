@@ -28,6 +28,7 @@ export function drawScores(ctx, scoreLeft, scoreRight) {
 }
 
 export function drawStartScreen(ctx) {
+  ctx.save();
   drawBackground(ctx);
   drawCenterLine(ctx);
   ctx.fillStyle = COLOR_FG;
@@ -40,9 +41,11 @@ export function drawStartScreen(ctx) {
   ctx.fillStyle = COLOR_LINE;
   ctx.fillText('W / S', CANVAS_W / 4, CANVAS_H / 2 + 70);
   ctx.fillText('UP / DOWN', (CANVAS_W * 3) / 4, CANVAS_H / 2 + 70);
+  ctx.restore();
 }
 
 export function drawWinnerScreen(ctx, winner) {
+  ctx.save();
   drawBackground(ctx);
   drawCenterLine(ctx);
   ctx.fillStyle = COLOR_FG;
@@ -51,4 +54,5 @@ export function drawWinnerScreen(ctx, winner) {
   ctx.fillText(`PLAYER ${winner} WINS!`, CANVAS_W / 2, CANVAS_H / 2 - 40);
   ctx.font = '14px "Press Start 2P"';
   ctx.fillText('PRESS ENTER TO PLAY AGAIN', CANVAS_W / 2, CANVAS_H / 2 + 30);
+  ctx.restore();
 }

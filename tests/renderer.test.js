@@ -50,11 +50,25 @@ describe('renderer', () => {
     expect(() => drawStartScreen(mockCtx())).not.toThrow();
   });
 
+  it('drawStartScreen calls save and restore (no state leak)', () => {
+    const ctx = mockCtx();
+    drawStartScreen(ctx);
+    expect(ctx.save).toHaveBeenCalled();
+    expect(ctx.restore).toHaveBeenCalled();
+  });
+
   it('drawWinnerScreen runs without throwing for player 1', () => {
     expect(() => drawWinnerScreen(mockCtx(), 1)).not.toThrow();
   });
 
   it('drawWinnerScreen runs without throwing for player 2', () => {
     expect(() => drawWinnerScreen(mockCtx(), 2)).not.toThrow();
+  });
+
+  it('drawWinnerScreen calls save and restore (no state leak)', () => {
+    const ctx = mockCtx();
+    drawWinnerScreen(ctx, 1);
+    expect(ctx.save).toHaveBeenCalled();
+    expect(ctx.restore).toHaveBeenCalled();
   });
 });
