@@ -18,11 +18,13 @@ export function drawCenterLine(ctx) {
 }
 
 export function drawScores(ctx, scoreLeft, scoreRight) {
+  ctx.save();
   ctx.fillStyle = COLOR_FG;
   ctx.font = '48px "Press Start 2P"';
   ctx.textAlign = 'center';
   ctx.fillText(String(scoreLeft), CANVAS_W / 4, 80);
   ctx.fillText(String(scoreRight), (CANVAS_W * 3) / 4, 80);
+  ctx.restore();
 }
 
 export function drawStartScreen(ctx) {
