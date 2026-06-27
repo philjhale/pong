@@ -1,49 +1,61 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { AudioManager } from '../src/audio.js';
 
+const HIT_POOL_SIZE = 4;
+
 function makeAudioNode() {
-  const node = {
+  return {
     currentTime: 0,
     preload: '',
     play: vi.fn().mockResolvedValue(undefined),
-    cloneNode: vi.fn(),
   };
-  node.cloneNode.mockReturnValue({ play: vi.fn().mockResolvedValue(undefined) });
-  return node;
 }
 
 describe('AudioManager', () => {
   let mgr;
-  let hitNode;
+  let hitNodes;
   let scoreNode;
 
   beforeEach(() => {
-    hitNode = makeAudioNode();
+    hitNodes = Array.from({ length: HIT_POOL_SIZE }, makeAudioNode);
     scoreNode = makeAudioNode();
-    let callCount = 0;
-    vi.stubGlobal('Audio', vi.fn(() => {
-      callCount++;
-      return callCount === 1 ? hitNode : scoreNode;
-    }));
+
+    const AudioMock = vi.fn()
+      .mockReturnValueOnce(hitNodes[0])
+      .mockReturnValueOnce(hitNodes[1])
+      .mockReturnValueOnce(hitNodes[2])
+      .mockReturnValueOnce(hitNodes[3])
+      .mockReturnValueOnce(scoreNode);
+
+    vi.stubGlobal('Audio', AudioMock);
     mgr = new AudioManager();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it('constructs without throwing', () => {
     expect(mgr).toBeDefined();
   });
 
-  it('playHit clones the node and calls play()', () => {
+  it('playHit resets currentTime and calls play() on pool node', () => {
     mgr.playHit();
-    expect(hitNode.cloneNode).toHaveBeenCalled();
-    const clone = hitNode.cloneNode.mock.results[0].value;
-    expect(clone.play).toHaveBeenCalled();
+    expect(hitNodes[0].currentTime).toBe(0);
+    expect(hitNodes[0].play).toHaveBeenCalled();
   });
 
-  it('playHit swallows rejected play promise', async () => {
-    hitNode.cloneNode.mockReturnValue({
-      play: vi.fn().mockRejectedValue(new Error('autoplay blocked')),
-    });
-    await expect(async () => mgr.playHit()).not.toThrow();
+  it('playHit round-robins through pool nodes', () => {
+    for (let i = 0; i < HIT_POOL_SIZE; i++) mgr.playHit();
+    hitNodes.forEach(n => expect(n.play).toHaveBeenCalledOnce());
+  });
+
+  it('playHit swallows NotAllowedError silently', async () => {
+    const err = Object.assign(new Error('autoplay blocked'), { name: 'NotAllowedError' });
+    hitNodes[0].play.mockRejectedValue(err);
+    mgr.playHit();
+    await new Promise(r => setTimeout(r, 0)); // flush microtask
+    // no unhandled rejection means the catch ran correctly
   });
 
   it('playScore resets currentTime to 0 and calls play()', () => {
@@ -52,8 +64,10 @@ describe('AudioManager', () => {
     expect(scoreNode.play).toHaveBeenCalled();
   });
 
-  it('playScore swallows rejected play promise', async () => {
-    scoreNode.play.mockRejectedValue(new Error('autoplay blocked'));
-    await expect(async () => mgr.playScore()).not.toThrow();
+  it('playScore swallows NotAllowedError silently', async () => {
+    const err = Object.assign(new Error('autoplay blocked'), { name: 'NotAllowedError' });
+    scoreNode.play.mockRejectedValue(err);
+    mgr.playScore();
+    await new Promise(r => setTimeout(r, 0));
   });
 });
