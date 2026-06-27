@@ -54,9 +54,7 @@ export class Ball {
     const minVy = this.speed * 0.2;
     if (Math.abs(this.vy) < minVy) {
       this.vy = minVy * Math.sign(this.vy || 1);
-      const mag2 = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-      this.vx = (this.vx / mag2) * this.speed;
-      this.vy = (this.vy / mag2) * this.speed;
+      this.vx = Math.sign(this.vx) * Math.sqrt(this.speed * this.speed - minVy * minVy);
     }
 
     return true;
