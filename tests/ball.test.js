@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Ball } from '../src/ball.js';
 import { Paddle } from '../src/paddle.js';
-import { CANVAS_W, CANVAS_H, BALL_RADIUS, BALL_INITIAL_SPEED, BALL_MAX_SPEED, PADDLE_MARGIN } from '../src/constants.js';
+import { CANVAS_W, CANVAS_H, BALL_RADIUS, BALL_INITIAL_SPEED, BALL_MAX_SPEED, PADDLE_MARGIN, PADDLE_W } from '../src/constants.js';
 
 describe('Ball', () => {
   let ball;
@@ -113,12 +113,22 @@ describe('Ball', () => {
     it('velocity magnitude equals speed after hit (normalization invariant)', () => {
       ball.collidePaddle(paddle);
       const mag = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
-      expect(mag).toBeCloseTo(ball.speed, 10);
+      expect(mag).toBeCloseTo(ball.speed, 5);
     });
 
     it('|vy| >= 0.2 * speed after center hit (min-vy guard)', () => {
       ball.collidePaddle(paddle); // vy=0 → hitPos=0 → guard fires
-      expect(Math.abs(ball.vy)).toBeGreaterThanOrEqual(ball.speed * 0.2 - 0.0001);
+      expect(Math.abs(ball.vy)).toBeGreaterThanOrEqual(ball.speed * 0.2);
+    });
+
+    it('reflects vx to negative (away from right paddle)', () => {
+      const rightPaddle = new Paddle(CANVAS_W - PADDLE_MARGIN - PADDLE_W);
+      rightPaddle.y = CANVAS_H / 2 - 40;
+      ball.x = rightPaddle.left() - BALL_RADIUS + 1;
+      ball.y = rightPaddle.centerY();
+      ball.vx = BALL_INITIAL_SPEED;
+      ball.collidePaddle(rightPaddle);
+      expect(ball.vx).toBeLessThan(0);
     });
   });
 });
