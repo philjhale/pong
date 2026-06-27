@@ -1,7 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { AudioManager } from '../src/audio.js';
-
-const HIT_POOL_SIZE = 4;
+import { AudioManager, HIT_POOL_SIZE } from '../src/audio.js';
 
 function makeAudioNode() {
   return {
@@ -20,12 +18,9 @@ describe('AudioManager', () => {
     hitNodes = Array.from({ length: HIT_POOL_SIZE }, makeAudioNode);
     scoreNode = makeAudioNode();
 
-    const AudioMock = vi.fn()
-      .mockReturnValueOnce(hitNodes[0])
-      .mockReturnValueOnce(hitNodes[1])
-      .mockReturnValueOnce(hitNodes[2])
-      .mockReturnValueOnce(hitNodes[3])
-      .mockReturnValueOnce(scoreNode);
+    const AudioMock = vi.fn();
+    for (const node of hitNodes) AudioMock.mockReturnValueOnce(node);
+    AudioMock.mockReturnValueOnce(scoreNode);
 
     vi.stubGlobal('Audio', AudioMock);
     mgr = new AudioManager();
@@ -33,13 +28,15 @@ describe('AudioManager', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
   it('constructs without throwing', () => {
     expect(mgr).toBeDefined();
   });
 
-  it('playHit resets currentTime and calls play() on pool node', () => {
+  it('playHit resets currentTime to 0 and calls play()', () => {
+    hitNodes[0].currentTime = 5;
     mgr.playHit();
     expect(hitNodes[0].currentTime).toBe(0);
     expect(hitNodes[0].play).toHaveBeenCalled();
@@ -50,24 +47,37 @@ describe('AudioManager', () => {
     hitNodes.forEach(n => expect(n.play).toHaveBeenCalledOnce());
   });
 
-  it('playHit swallows NotAllowedError silently', async () => {
+  it('playHit swallows NotAllowedError silently (no console.warn)', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const err = Object.assign(new Error('autoplay blocked'), { name: 'NotAllowedError' });
     hitNodes[0].play.mockRejectedValue(err);
     mgr.playHit();
-    await new Promise(r => setTimeout(r, 0)); // flush microtask
-    // no unhandled rejection means the catch ran correctly
+    await new Promise(r => setTimeout(r, 0));
+    expect(warnSpy).not.toHaveBeenCalled();
+  });
+
+  it('playHit logs non-NotAllowedError via console.warn', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const err = new Error('decode error');
+    hitNodes[0].play.mockRejectedValue(err);
+    mgr.playHit();
+    await new Promise(r => setTimeout(r, 0));
+    expect(warnSpy).toHaveBeenCalledOnce();
   });
 
   it('playScore resets currentTime to 0 and calls play()', () => {
+    scoreNode.currentTime = 9;
     mgr.playScore();
     expect(scoreNode.currentTime).toBe(0);
     expect(scoreNode.play).toHaveBeenCalled();
   });
 
-  it('playScore swallows NotAllowedError silently', async () => {
+  it('playScore swallows NotAllowedError silently (no console.warn)', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const err = Object.assign(new Error('autoplay blocked'), { name: 'NotAllowedError' });
     scoreNode.play.mockRejectedValue(err);
     mgr.playScore();
     await new Promise(r => setTimeout(r, 0));
+    expect(warnSpy).not.toHaveBeenCalled();
   });
 });

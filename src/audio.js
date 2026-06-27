@@ -1,4 +1,4 @@
-const HIT_POOL_SIZE = 4;
+export const HIT_POOL_SIZE = 4;
 
 export class AudioManager {
   constructor() {
