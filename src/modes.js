@@ -10,7 +10,7 @@ export const MODES = [
     label: 'Two Ball',
     ballCount: 2,
     speedProgression: false,
-    onScore(game) {
+    onScore(game, _side, _ball) {
       // fixed directions: ball 0 right, ball 1 left — symmetric reset regardless of which side scored
       game.balls.forEach((ball, i) => ball.reset(i === 0 ? 1 : -1));
     },

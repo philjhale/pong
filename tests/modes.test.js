@@ -20,6 +20,7 @@ describe('MODES', () => {
     const m = MODES.find(m => m.id === 'CLASSIC');
     expect(m.ballCount).toBe(1);
     expect(m.speedProgression).toBe(true);
+    expect(m.onScore).toBeUndefined();
   });
 
   it('TWO_BALL has ballCount 2 and speedProgression false', () => {
@@ -53,6 +54,10 @@ describe('TWO_BALL onScore hook', () => {
     const ball0 = { reset: vi.fn() };
     const ball1 = { reset: vi.fn() };
     twoBall.onScore({ balls: [ball0, ball1] }, 'right', ball0);
+    expect(ball0.reset).toHaveBeenCalledWith(1);
+    expect(ball1.reset).toHaveBeenCalledWith(-1);
+    // also verify left-side scoring gives same symmetric reset
+    twoBall.onScore({ balls: [ball0, ball1] }, 'left', ball1);
     expect(ball0.reset).toHaveBeenCalledWith(1);
     expect(ball1.reset).toHaveBeenCalledWith(-1);
   });
